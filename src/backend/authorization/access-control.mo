@@ -21,14 +21,15 @@ module {
     };
   };
 
-  // First non-anonymous principal to call this becomes admin.
-  // Subsequent callers are registered as regular users.
-  public func initialize(state : AccessControlState, caller : Principal) {
+  // The very first non-anonymous principal to call this becomes admin automatically.
+  // All subsequent callers become regular users.
+  public func initialize(state : AccessControlState, caller : Principal, adminToken : Text, userProvidedToken : Text) {
     if (caller.isAnonymous()) { return };
     switch (state.userRoles.get(caller)) {
-      case (?_) {}; // already registered
+      case (?_) {}; // Already registered, do nothing
       case (null) {
         if (not state.adminAssigned) {
+          // First user ever => grant admin unconditionally
           state.userRoles.add(caller, #admin);
           state.adminAssigned := true;
         } else {
@@ -42,7 +43,9 @@ module {
     if (caller.isAnonymous()) { return #guest };
     switch (state.userRoles.get(caller)) {
       case (?role) { role };
-      case (null) { #guest }; // unregistered = guest, not a trap
+      case (null) {
+        Runtime.trap("User is not registered");
+      };
     };
   };
 

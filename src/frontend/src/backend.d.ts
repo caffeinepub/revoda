@@ -55,7 +55,7 @@ export interface PublicStats {
 }
 
 export interface backendInterface {
-    initializeUser(): Promise<void>;
+    _initializeAccessControlWithSecret(secret: string): Promise<void>;
     submitReport(category: string, description: string, gpsLat: number, gpsLon: number, clientTimestamp: string, deviceId: string, mediaKeys: string[], anonymous: boolean, signatureData: string): Promise<string>;
     getReportCount(): Promise<bigint>;
     getReports(): Promise<Report[]>;
