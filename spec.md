@@ -1,50 +1,41 @@
-# Revoda Voter Legal Defense Interface
+# Revoda
 
 ## Current State
-New project. No existing code.
+Revoda is a mobile-first PWA for EiE Nigeria. It has:
+- 5-step incident reporting wizard (category, media/GPS, sworn statement, signature, submit)
+- PDF generation for "Statement of Fact"
+- Admin dashboard (Internet Identity login) with report filtering and hotspot map
+- Blob storage for media uploads
+- Role-based authorization (admin/user/guest)
+- "Track My Rep" placeholder
+
+Backend exposes: submitReport, getReportCount, getReports, getReport, plus auth/blob-storage primitives.
 
 ## Requested Changes (Diff)
 
 ### Add
-- Full incident reporting flow (5 steps): category selection, evidence upload, metadata capture, statement, signature
-- Automated PDF generation (Voter's Statement of Fact) using jsPDF on the frontend
-- GPS coordinate + server-side timestamp capture displayed transparently to user during reporting
-- Offline-first behavior: queue reports to localStorage if offline, auto-sync on reconnect
-- Anonymous submission toggle
-- "Track My Rep" placeholder screen
-- Role-based admin dashboard: table of all reports, "Legal Ready" filter (reports with valid GPS+timestamp), basic map view showing report hotspots by Nigerian state
-- Admin access via authorization component (admin role)
-- On-platform blob storage for media uploads (photos/short videos)
-- Backend stores all report data: incident ID, category, description, GPS, timestamp, device ID, media blob references, anonymous flag, signature image
+1. **Reform Lobby** -- A section where EiE legal teams/partners can post reform bills or advocacy items driven by election-day evidence. Citizens can sign petitions. Open submission form (no login required to submit updates/items or sign petitions). Each item has: title, summary, category (e.g. "BVAS Reform", "Polling Unit Access"), evidence link to related incidents, petition signature count, and status ("Active", "Passed", "Pending").
+
+2. **Disenfranchisement Archive** -- A public-facing anonymized dashboard showing aggregated disenfranchisement data from submitted reports. Displays: total incidents by category, incidents by state/LGA (from GPS-derived metadata or user-submitted field), timeline of incidents, and a searchable/filterable archive table. Legal teams/partners can submit archive entries (additional documented cases not in the report wizard) via an open form.
+
+3. **Open Partner Submission Form** -- A shared form (no login required) for legal teams and partners to submit:
+   - Reform lobby items (new reform proposals with supporting evidence)
+   - Disenfranchisement archive entries (documented cases with location, category, description, source)
+   These submissions automatically appear in the respective public sections and the admin dashboard.
 
 ### Modify
-N/A (new project)
+- Backend: add ReformItem and ArchiveEntry types with their CRUD operations
+- App.tsx: add new views for reform-lobby, disenfranchisement-archive, partner-submit
+- Admin Dashboard: add tabs/sections for reviewing reform items and archive entries
+- Landing page: add navigation links for the two new sections
 
 ### Remove
-N/A (new project)
+- Nothing removed
 
 ## Implementation Plan
-1. Motoko backend:
-   - Report record type: id, category, description, gpsLat, gpsLon, timestamp, deviceId, mediaKeys (blob refs), anonymous, signatureData, submittedAt
-   - submitReport() - stores report, returns generated incident ID
-   - getReports() - admin only, returns all reports
-   - getReport(id) - returns single report
-   - Reports stored in stable var (HashMap)
-
-2. Frontend flows:
-   - Landing page: EiE Nigeria brand (red/white/green), two CTAs, ticker
-   - 5-step report wizard with progress indicator
-   - Step 1: category icons (PU Not Open, Tech/BVAS Failure, Voter Intimidation, Results Mismatch, Violence)
-   - Step 2: photo/video capture + file upload, blob storage integration
-   - Step 3: auto-fetch GPS + display timestamp
-   - Step 4: description textarea + oath checkbox
-   - Step 5: finger-draw signature canvas + submit
-   - Post-submit: generate and download PDF (jsPDF)
-   - Offline queue in localStorage
-
-3. Admin dashboard (auth-gated, admin role):
-   - Login screen
-   - Reports table with Legal Ready filter
-   - Simple map using embedded iframe or SVG Nigeria map showing report counts by state
-
-4. Track My Rep: placeholder screen with "Coming Soon" message
+1. Backend: add `ReformItem` type (id, title, summary, category, status, evidenceNote, petitionCount, submittedBy, submittedAt), `ArchiveEntry` type (id, caseTitle, state, lga, category, description, source, date, submittedAt). Add public functions: submitReformItem, signPetition, getReformItems, submitArchiveEntry, getArchiveEntries, getPublicStats (aggregated anonymized report stats). Admin function: updateReformItemStatus.
+2. Frontend: ReformLobby component (list of reform items, sign petition button, submit new item form)
+3. Frontend: DisenfranchisementArchive component (stats dashboard with charts, searchable archive table, submit new entry form)
+4. Frontend: Update App.tsx with new views
+5. Frontend: Update Landing with navigation to new sections
+6. Frontend: Update AdminDashboard with tabs for reform items and archive entries

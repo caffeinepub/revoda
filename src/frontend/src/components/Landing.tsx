@@ -1,5 +1,6 @@
 import {
   AlertTriangle,
+  Archive,
   BookOpen,
   Camera,
   CheckCircle,
@@ -7,6 +8,7 @@ import {
   MapPin,
   Search,
   Shield,
+  TrendingUp,
 } from "lucide-react";
 import { motion } from "motion/react";
 import type { AppView } from "../App";
@@ -35,16 +37,32 @@ const features = [
   {
     icon: Shield,
     title: "Legal Ready Reports",
-    desc: "Instantly generate a 'Voter's Statement of Fact' PDF with your digital signature, compliant with Section 84 of the Nigerian Evidence Act.",
+    desc: 'Instantly generate a "Voter\u2019s Statement of Fact" PDF with your digital signature, compliant with Section 84 of the Nigerian Evidence Act.',
     color: "text-brand-red",
     bg: "bg-red-50",
   },
   {
     icon: Search,
     title: "Track Your Rep",
-    desc: "Monitor your representative's voting record, legislative attendance, and public commitments. Launching ahead of the 2027 elections.",
+    desc: "Monitor your representative\u2019s voting record, legislative attendance, and public commitments. Launching ahead of the 2027 elections.",
     color: "text-brand-green",
     bg: "bg-green-50",
+  },
+  {
+    icon: TrendingUp,
+    title: "Reform Lobby",
+    desc: "Election-day evidence turned into legislative action. Sign petitions on active reform proposals headed to INEC and the National Assembly.",
+    color: "text-brand-red",
+    bg: "bg-red-50",
+    view: "reform-lobby" as AppView,
+  },
+  {
+    icon: Archive,
+    title: "Disenfranchisement Archive",
+    desc: "A permanent, anonymised public record of voter suppression across Nigeria used by researchers, media, and international observers.",
+    color: "text-brand-green",
+    bg: "bg-green-50",
+    view: "disenfranchisement-archive" as AppView,
   },
 ];
 
@@ -89,14 +107,12 @@ export function Landing({ navigate }: LandingProps) {
             "linear-gradient(105deg, #1a0505 0%, #3d0a0a 40%, #1c3a2a 100%)",
         }}
       >
-        {/* Hero image */}
         <img
           src="/assets/generated/hero-voters-queue.dim_1400x700.jpg"
           alt="Nigerian voters at a polling unit"
           className="absolute inset-0 w-full h-full object-cover opacity-35 mix-blend-luminosity"
           loading="eager"
         />
-        {/* Overlay gradient */}
         <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/50 to-transparent" />
 
         <div className="relative z-10 max-w-6xl mx-auto px-4 md:px-8 py-16 md:py-24">
@@ -106,7 +122,6 @@ export function Landing({ navigate }: LandingProps) {
             transition={{ duration: 0.7 }}
             className="max-w-2xl"
           >
-            {/* Badge */}
             <span className="inline-flex items-center gap-1.5 bg-brand-red/20 border border-brand-red/40 text-red-200 text-xs font-semibold px-3 py-1 rounded-full mb-6">
               <span className="w-1.5 h-1.5 rounded-full bg-red-400 animate-pulse" />
               2027 Nigerian Election Monitoring
@@ -127,7 +142,7 @@ export function Landing({ navigate }: LandingProps) {
               Your documentation is your defense.
             </p>
 
-            <div className="flex flex-col sm:flex-row gap-4">
+            <div className="flex flex-col sm:flex-row gap-4 flex-wrap">
               <button
                 type="button"
                 data-ocid="landing.primary_button"
@@ -139,12 +154,21 @@ export function Landing({ navigate }: LandingProps) {
               </button>
               <button
                 type="button"
-                data-ocid="landing.secondary_button"
-                onClick={() => navigate("track-rep")}
+                data-ocid="landing.reform_button"
+                onClick={() => navigate("reform-lobby")}
+                className="flex items-center justify-center gap-3 bg-white/10 hover:bg-white/20 border border-white/30 text-white font-bold text-base px-8 py-4 rounded-xl transition-all duration-200 hover:scale-105 active:scale-95"
+              >
+                <TrendingUp className="w-5 h-5" />
+                REFORM LOBBY
+              </button>
+              <button
+                type="button"
+                data-ocid="landing.archive_button"
+                onClick={() => navigate("disenfranchisement-archive")}
                 className="flex items-center justify-center gap-3 bg-brand-green hover:bg-brand-green-dark text-white font-bold text-base px-8 py-4 rounded-xl shadow-cta transition-all duration-200 hover:scale-105 active:scale-95"
               >
-                <Search className="w-5 h-5" />
-                TRACK MY REP
+                <Archive className="w-5 h-5" />
+                ARCHIVE
               </button>
             </div>
           </motion.div>
@@ -181,7 +205,17 @@ export function Landing({ navigate }: LandingProps) {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ duration: 0.4, delay: i * 0.1 }}
-                className="flex gap-4 p-6 rounded-2xl border border-border bg-white shadow-card hover:shadow-md transition-shadow"
+                className={`flex gap-4 p-6 rounded-2xl border border-border bg-white shadow-card hover:shadow-md transition-shadow ${
+                  f.view ? "cursor-pointer hover:border-brand-red/30" : ""
+                }`}
+                onClick={() => f.view && navigate(f.view)}
+                role={f.view ? "button" : undefined}
+                tabIndex={f.view ? 0 : undefined}
+                onKeyDown={
+                  f.view
+                    ? (e) => e.key === "Enter" && navigate(f.view!)
+                    : undefined
+                }
               >
                 <div
                   className={`shrink-0 w-12 h-12 rounded-xl ${f.bg} flex items-center justify-center`}
@@ -189,7 +223,14 @@ export function Landing({ navigate }: LandingProps) {
                   <f.icon className={`w-6 h-6 ${f.color}`} />
                 </div>
                 <div>
-                  <h3 className="font-bold text-foreground mb-1">{f.title}</h3>
+                  <h3 className="font-bold text-foreground mb-1 flex items-center gap-2">
+                    {f.title}
+                    {f.view && (
+                      <span className="text-xs text-brand-red font-normal">
+                        View &rarr;
+                      </span>
+                    )}
+                  </h3>
                   <p className="text-sm text-muted-foreground leading-relaxed">
                     {f.desc}
                   </p>
@@ -219,7 +260,6 @@ export function Landing({ navigate }: LandingProps) {
           </motion.div>
 
           <div className="bg-white rounded-2xl border border-border p-8 shadow-card">
-            {/* Step indicators */}
             <div className="flex items-center gap-0 mb-10 overflow-x-auto pb-2">
               {steps.map((s, i) => (
                 <div key={s.n} className="flex items-center">
@@ -244,7 +284,6 @@ export function Landing({ navigate }: LandingProps) {
               ))}
             </div>
 
-            {/* Step cards */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
               {steps.map((s, i) => (
                 <div
@@ -256,7 +295,9 @@ export function Landing({ navigate }: LandingProps) {
                   }`}
                 >
                   <div
-                    className={`text-sm font-bold mb-1 ${i === 0 ? "text-brand-red" : "text-foreground"}`}
+                    className={`text-sm font-bold mb-1 ${
+                      i === 0 ? "text-brand-red" : "text-foreground"
+                    }`}
                   >
                     Step {s.n}: {s.label}
                   </div>
@@ -308,7 +349,7 @@ export function Landing({ navigate }: LandingProps) {
                   { icon: MapPin, text: "Geographic hotspot map of incidents" },
                   {
                     icon: CheckCircle,
-                    text: "Legal Ready filter — GPS + timestamp verified",
+                    text: "Legal Ready filter \u2014 GPS + timestamp verified",
                   },
                   {
                     icon: BookOpen,
@@ -335,7 +376,6 @@ export function Landing({ navigate }: LandingProps) {
               </button>
             </motion.div>
 
-            {/* Dashboard preview card */}
             <motion.div
               initial={{ opacity: 0, x: 20 }}
               whileInView={{ opacity: 1, x: 0 }}
@@ -343,7 +383,6 @@ export function Landing({ navigate }: LandingProps) {
               transition={{ duration: 0.5, delay: 0.15 }}
               className="rounded-2xl border border-border shadow-md overflow-hidden"
             >
-              {/* Mock dashboard header */}
               <div className="bg-foreground px-4 py-3 flex items-center gap-2">
                 <div className="w-3 h-3 rounded-full bg-red-500" />
                 <div className="w-3 h-3 rounded-full bg-yellow-400" />
@@ -352,11 +391,9 @@ export function Landing({ navigate }: LandingProps) {
                   Revoda Admin Dashboard
                 </span>
               </div>
-              {/* Mock map */}
               <div className="bg-green-900/10 relative h-40 flex items-center justify-center overflow-hidden">
                 <NigeriaMapSVG />
               </div>
-              {/* Mock table */}
               <div className="p-3 bg-white">
                 <div className="text-xs font-bold text-muted-foreground mb-2">
                   RECENT REPORTS
@@ -389,9 +426,13 @@ export function Landing({ navigate }: LandingProps) {
                     <span className="flex-1 text-foreground">{r.cat}</span>
                     <span className="text-muted-foreground">{r.state}</span>
                     <span
-                      className={`text-[10px] font-bold px-1.5 py-0.5 rounded ${r.legal ? "bg-green-100 text-brand-green" : "bg-red-100 text-brand-red"}`}
+                      className={`text-[10px] font-bold px-1.5 py-0.5 rounded ${
+                        r.legal
+                          ? "bg-green-100 text-brand-green"
+                          : "bg-red-100 text-brand-red"
+                      }`}
                     >
-                      {r.legal ? "✓ Legal" : "Missing GPS"}
+                      {r.legal ? "\u2713 Legal" : "Missing GPS"}
                     </span>
                   </div>
                 ))}
@@ -423,7 +464,6 @@ function NigeriaMapSVG() {
     >
       <title>Nigeria election hotspot preview map</title>
       <rect x="0" y="0" width="320" height="150" fill="#e8f5e9" />
-      {/* Simplified Nigeria outline */}
       <path
         d="M90,20 L240,15 L260,40 L250,80 L230,120 L200,135 L150,130 L110,120 L80,100 L70,70 L75,45 Z"
         fill="#c8e6c9"

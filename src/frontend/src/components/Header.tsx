@@ -9,7 +9,9 @@ interface HeaderProps {
 export function Header({ navigate, currentView }: HeaderProps) {
   const links: { label: string; view: AppView }[] = [
     { label: "Home", view: "landing" },
-    { label: "Reports", view: "report-wizard" },
+    { label: "Report", view: "report-wizard" },
+    { label: "Reform Lobby", view: "reform-lobby" },
+    { label: "Archive", view: "disenfranchisement-archive" },
     { label: "Track Reps", view: "track-rep" },
     { label: "Admin", view: "admin-login" },
   ];
@@ -17,7 +19,6 @@ export function Header({ navigate, currentView }: HeaderProps) {
   return (
     <header className="sticky top-0 z-50 w-full bg-white border-b border-border shadow-xs">
       <div className="max-w-6xl mx-auto px-4 md:px-8 h-16 flex items-center justify-between">
-        {/* Logo */}
         <button
           type="button"
           data-ocid="nav.link"
@@ -32,8 +33,7 @@ export function Header({ navigate, currentView }: HeaderProps) {
           </span>
         </button>
 
-        {/* Nav links – desktop */}
-        <nav className="hidden md:flex items-center gap-6">
+        <nav className="hidden md:flex items-center gap-5">
           {links.map((l) => (
             <button
               type="button"
@@ -54,7 +54,6 @@ export function Header({ navigate, currentView }: HeaderProps) {
           ))}
         </nav>
 
-        {/* User icon */}
         <button
           type="button"
           data-ocid="nav.link"
@@ -70,7 +69,6 @@ export function Header({ navigate, currentView }: HeaderProps) {
         </button>
       </div>
 
-      {/* Mobile nav */}
       <div className="md:hidden flex gap-1 px-4 pb-2 overflow-x-auto">
         {links.map((l) => (
           <button
