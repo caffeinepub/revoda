@@ -55,13 +55,13 @@ export interface PublicStats {
 }
 
 export interface backendInterface {
+    initializeUser(): Promise<void>;
     submitReport(category: string, description: string, gpsLat: number, gpsLon: number, clientTimestamp: string, deviceId: string, mediaKeys: string[], anonymous: boolean, signatureData: string): Promise<string>;
     getReportCount(): Promise<bigint>;
     getReports(): Promise<Report[]>;
     getReport(id: string): Promise<[] | [Report]>;
     isCallerAdmin(): Promise<boolean>;
     getCallerUserRole(): Promise<UserRole>;
-    _initializeAccessControlWithSecret(userSecret: string): Promise<void>;
     assignCallerUserRole(user: Principal, role: UserRole): Promise<void>;
     // Reform Lobby
     submitReformItem(title: string, summary: string, category: string, evidenceNote: string, submittedBy: string): Promise<string>;
