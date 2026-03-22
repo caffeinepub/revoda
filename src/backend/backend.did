@@ -1,0 +1,52 @@
+type _CaffeineStorageRefillResult = 
+ record {
+   success: opt bool;
+   topped_up_amount: opt nat;
+ };
+type _CaffeineStorageRefillInformation = record {
+                                           proposed_top_up_amount: opt nat;};
+type _CaffeineStorageCreateCertificateResult = 
+ record {
+   blob_hash: text;
+   method: text;
+ };
+type UserRole = 
+ variant {
+   admin;
+   guest;
+   user;
+ };
+type Report = 
+ record {
+   anonymous: bool;
+   category: text;
+   clientTimestamp: text;
+   description: text;
+   deviceId: text;
+   gpsLat: float64;
+   gpsLon: float64;
+   id: text;
+   mediaKeys: vec text;
+   signatureData: text;
+   submittedAt: int;
+ };
+service : {
+  _caffeineStorageBlobIsLive: (hash: blob) -> (bool) query;
+  _caffeineStorageBlobsToDelete: () -> (vec blob) query;
+  _caffeineStorageConfirmBlobDeletion: (blobs: vec blob) -> ();
+  _caffeineStorageCreateCertificate: (blobHash: text) ->
+   (_CaffeineStorageCreateCertificateResult);
+  _caffeineStorageRefillCashier: (refillInformation:
+   opt _CaffeineStorageRefillInformation) -> (_CaffeineStorageRefillResult);
+  _caffeineStorageUpdateGatewayPrincipals: () -> ();
+  _initializeAccessControlWithSecret: (userSecret: text) -> ();
+  assignCallerUserRole: (user: principal, role: UserRole) -> ();
+  getCallerUserRole: () -> (UserRole) query;
+  getReport: (id: text) -> (opt Report) query;
+  getReportCount: () -> (nat) query;
+  getReports: () -> (vec Report) query;
+  isCallerAdmin: () -> (bool) query;
+  submitReport: (category: text, description: text, gpsLat: float64, gpsLon:
+   float64, clientTimestamp: text, deviceId: text, mediaKeys: vec text,
+   anonymous: bool, signatureData: text) -> (text);
+}
