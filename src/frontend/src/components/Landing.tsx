@@ -6,7 +6,6 @@ import {
   CheckCircle,
   FileText,
   MapPin,
-  Search,
   Shield,
   TrendingUp,
 } from "lucide-react";
@@ -40,13 +39,6 @@ const features = [
     desc: 'Instantly generate a "Voter\u2019s Statement of Fact" PDF with your digital signature, compliant with Section 84 of the Nigerian Evidence Act.',
     color: "text-brand-red",
     bg: "bg-red-50",
-  },
-  {
-    icon: Search,
-    title: "Track Your Rep",
-    desc: "Monitor your representative\u2019s voting record, legislative attendance, and public commitments. Launching ahead of the 2027 elections.",
-    color: "text-brand-green",
-    bg: "bg-green-50",
   },
   {
     icon: TrendingUp,

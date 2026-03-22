@@ -62,11 +62,11 @@ export function Footer({ navigate }: FooterProps) {
               Platform
             </h4>
             <ul className="space-y-2">
-              {["Home", "landing"] as const}
               {[
                 ["Home", "landing"],
                 ["Report Incident", "report-wizard"],
-                ["Track My Rep", "track-rep"],
+                ["Reform Lobby", "reform-lobby"],
+                ["Archive", "disenfranchisement-archive"],
                 ["Admin", "admin-login"],
               ].map(([label, view]) => (
                 <li key={view}>

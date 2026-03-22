@@ -6,12 +6,10 @@ import { DisenfranchisementArchive } from "./components/DisenfranchisementArchiv
 import { Landing } from "./components/Landing";
 import { ReformLobby } from "./components/ReformLobby";
 import { ReportWizard } from "./components/ReportWizard";
-import { TrackMyRep } from "./components/TrackMyRep";
 
 export type AppView =
   | "landing"
   | "report-wizard"
-  | "track-rep"
   | "admin-login"
   | "admin-dashboard"
   | "reform-lobby"
@@ -29,7 +27,6 @@ export default function App() {
     <div className="min-h-screen bg-background font-inter">
       {view === "landing" && <Landing navigate={navigate} />}
       {view === "report-wizard" && <ReportWizard navigate={navigate} />}
-      {view === "track-rep" && <TrackMyRep navigate={navigate} />}
       {view === "admin-login" && <AdminLogin navigate={navigate} />}
       {view === "admin-dashboard" && <AdminDashboard navigate={navigate} />}
       {view === "reform-lobby" && <ReformLobby navigate={navigate} />}

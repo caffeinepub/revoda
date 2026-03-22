@@ -12,7 +12,6 @@ export function Header({ navigate, currentView }: HeaderProps) {
     { label: "Report", view: "report-wizard" },
     { label: "Reform Lobby", view: "reform-lobby" },
     { label: "Archive", view: "disenfranchisement-archive" },
-    { label: "Track Reps", view: "track-rep" },
     { label: "Admin", view: "admin-login" },
   ];
 
