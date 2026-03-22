@@ -1,6 +1,5 @@
 import { AlertCircle, Loader2, Shield } from "lucide-react";
 import { motion } from "motion/react";
-import { useState } from "react";
 import type { AppView } from "../App";
 import { useInternetIdentity } from "../hooks/useInternetIdentity";
 import { useIsAdmin } from "../hooks/useQueries";
@@ -19,14 +18,7 @@ export function AdminLogin({ navigate }: AdminLoginProps) {
   const isAdmin = adminQuery.data === true;
   const isCheckingAdmin = adminQuery.isLoading;
 
-  const [hasChecked, setHasChecked] = useState(false);
-
-  const handleLogin = () => {
-    login();
-    setHasChecked(true);
-  };
-
-  // If logged in and confirmed admin, redirect
+  // Redirect as soon as we confirm admin
   if (isLoggedIn && isAdmin && !isCheckingAdmin) {
     navigate("admin-dashboard");
     return null;
@@ -61,7 +53,7 @@ export function AdminLogin({ navigate }: AdminLoginProps) {
               <button
                 type="button"
                 data-ocid="admin_login.primary_button"
-                onClick={handleLogin}
+                onClick={login}
                 disabled={isLoggingIn || isInitializing}
                 className="w-full flex items-center justify-center gap-3 bg-brand-red hover:bg-brand-red-dark text-white font-bold py-3.5 rounded-xl shadow-cta transition-all hover:scale-[1.01] disabled:opacity-60"
               >
@@ -82,7 +74,7 @@ export function AdminLogin({ navigate }: AdminLoginProps) {
             </div>
           )}
 
-          {/* Logged in, checking admin */}
+          {/* Logged in, checking admin status */}
           {isLoggedIn && isCheckingAdmin && (
             <div
               data-ocid="admin_login.loading_state"
@@ -96,7 +88,7 @@ export function AdminLogin({ navigate }: AdminLoginProps) {
           )}
 
           {/* Logged in, NOT admin */}
-          {isLoggedIn && !isCheckingAdmin && !isAdmin && hasChecked && (
+          {isLoggedIn && !isCheckingAdmin && !isAdmin && (
             <div data-ocid="admin_login.error_state" className="space-y-4">
               <div className="flex items-start gap-3 p-4 rounded-xl bg-red-50 border border-red-200">
                 <AlertCircle className="w-5 h-5 text-brand-red shrink-0 mt-0.5" />

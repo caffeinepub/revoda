@@ -15,6 +15,7 @@ import {
   Flame,
   Loader2,
   MapPin,
+  RefreshCw,
   RotateCcw,
   Upload,
   Users,
@@ -129,21 +130,25 @@ export function ReportWizard({ navigate }: ReportWizardProps) {
   const submitMutation = useSubmitReport();
   const deviceId = getOrCreateDeviceId();
 
+  const fetchGeo = useCallback(() => {
+    setGpsStatus("fetching");
+    navigator.geolocation?.getCurrentPosition(
+      (pos) => {
+        setGpsLat(pos.coords.latitude);
+        setGpsLon(pos.coords.longitude);
+        setGpsStatus("ok");
+      },
+      () => setGpsStatus("denied"),
+      { timeout: 15000, enableHighAccuracy: true },
+    );
+  }, []);
+
   useEffect(() => {
     if (step === 2) {
       setTimestamp(new Date().toISOString());
-      setGpsStatus("fetching");
-      navigator.geolocation?.getCurrentPosition(
-        (pos) => {
-          setGpsLat(pos.coords.latitude);
-          setGpsLon(pos.coords.longitude);
-          setGpsStatus("ok");
-        },
-        () => setGpsStatus("denied"),
-        { timeout: 10000 },
-      );
+      fetchGeo();
     }
-  }, [step]);
+  }, [step, fetchGeo]);
 
   useEffect(() => {
     const handleOnline = () => {
@@ -158,11 +163,16 @@ export function ReportWizard({ navigate }: ReportWizardProps) {
     return () => window.removeEventListener("online", handleOnline);
   }, []);
 
+  // Canvas setup — deferred with rAF so AnimatePresence finishes mounting first
   const setupCanvas = useCallback(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
+
+    // White background so strokes are always visible
+    ctx.fillStyle = "#ffffff";
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
 
     const getPos = (e: MouseEvent | TouchEvent) => {
       const rect = canvas.getBoundingClientRect();
@@ -225,17 +235,26 @@ export function ReportWizard({ navigate }: ReportWizardProps) {
   }, []);
 
   useEffect(() => {
-    if (step === 4) {
-      const cleanup = setupCanvas();
-      return cleanup;
-    }
+    if (step !== 4) return;
+    // Defer canvas setup until after AnimatePresence finishes mounting
+    let raf: number;
+    let cleanup: (() => void) | undefined;
+    raf = requestAnimationFrame(() => {
+      cleanup = setupCanvas();
+    });
+    return () => {
+      cancelAnimationFrame(raf);
+      cleanup?.();
+    };
   }, [step, setupCanvas]);
 
   const clearSignature = () => {
     const canvas = canvasRef.current;
     if (!canvas) return;
     const ctx = canvas.getContext("2d");
-    ctx?.clearRect(0, 0, canvas.width, canvas.height);
+    if (!ctx) return;
+    ctx.fillStyle = "#ffffff";
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
     setSignatureDataUrl("");
   };
 
@@ -245,7 +264,7 @@ export function ReportWizard({ navigate }: ReportWizardProps) {
     setMediaPreviewUrl(objectUrl);
 
     if (!storageClient) {
-      toast.error("Storage not ready. Please try again.");
+      toast.error("Storage not ready — please wait a moment and try again.");
       return;
     }
     setIsUploading(true);
@@ -260,7 +279,9 @@ export function ReportWizard({ navigate }: ReportWizardProps) {
       toast.success("Media uploaded successfully");
     } catch (uploadErr) {
       toast.error(
-        `Upload failed: ${uploadErr instanceof Error ? uploadErr.message : String(uploadErr)}`,
+        `Upload failed: ${
+          uploadErr instanceof Error ? uploadErr.message : String(uploadErr)
+        }`,
       );
     } finally {
       setIsUploading(false);
@@ -285,7 +306,8 @@ export function ReportWizard({ navigate }: ReportWizardProps) {
       setSubmittedId(id);
       setIsSuccess(true);
       toast.success("Report submitted successfully!");
-    } catch {
+    } catch (err) {
+      console.error("Submit error:", err);
       toast.error("Submission failed — saving offline");
       saveOfflineQueue(payload);
     }
@@ -307,7 +329,9 @@ export function ReportWizard({ navigate }: ReportWizardProps) {
       });
     } catch (pdfErr) {
       toast.error(
-        `PDF generation failed: ${pdfErr instanceof Error ? pdfErr.message : String(pdfErr)}`,
+        `PDF generation failed: ${
+          pdfErr instanceof Error ? pdfErr.message : String(pdfErr)
+        }`,
       );
     } finally {
       setIsGeneratingPdf(false);
@@ -400,7 +424,9 @@ export function ReportWizard({ navigate }: ReportWizardProps) {
               (s, i) => (
                 <span
                   key={s}
-                  className={`text-[10px] font-medium ${i + 1 === step ? "text-brand-red" : "text-muted-foreground"}`}
+                  className={`text-[10px] font-medium ${
+                    i + 1 === step ? "text-brand-red" : "text-muted-foreground"
+                  }`}
                 >
                   {s}
                 </span>
@@ -417,8 +443,9 @@ export function ReportWizard({ navigate }: ReportWizardProps) {
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: -20 }}
-            transition={{ duration: 0.25 }}
+            transition={{ duration: 0.2 }}
           >
+            {/* ── STEP 1: Category ── */}
             {step === 1 && (
               <div>
                 <h2 className="text-2xl font-black text-foreground mb-2">
@@ -455,30 +482,43 @@ export function ReportWizard({ navigate }: ReportWizardProps) {
               </div>
             )}
 
+            {/* ── STEP 2: Evidence ── */}
             {step === 2 && (
               <div>
                 <h2 className="text-2xl font-black text-foreground mb-2">
                   Capture Evidence
                 </h2>
                 <p className="text-muted-foreground mb-6">
-                  Upload a photo or short video (max 30 seconds). Metadata is
-                  auto-captured below.
+                  Upload a photo or short video. Metadata is auto-captured
+                  below.
                 </p>
 
                 <label
                   data-ocid="report.dropzone"
-                  className="block border-2 border-dashed border-border rounded-2xl p-8 text-center cursor-pointer hover:border-brand-red transition-colors mb-4"
+                  className={`block border-2 border-dashed rounded-2xl p-8 text-center cursor-pointer transition-colors mb-4 ${
+                    storageClient
+                      ? "border-border hover:border-brand-red"
+                      : "border-border opacity-60 cursor-not-allowed"
+                  }`}
                 >
                   <input
                     type="file"
                     accept="image/*,video/*"
                     className="hidden"
+                    disabled={!storageClient || isUploading}
                     onChange={(e) => {
                       const f = e.target.files?.[0];
                       if (f) handleFileChange(f);
                     }}
                   />
-                  {mediaPreviewUrl ? (
+                  {!storageClient ? (
+                    <div>
+                      <Loader2 className="w-8 h-8 text-muted-foreground mx-auto mb-2 animate-spin" />
+                      <p className="text-sm text-muted-foreground">
+                        Initialising storage...
+                      </p>
+                    </div>
+                  ) : mediaPreviewUrl ? (
                     mediaFile?.type.startsWith("video") ? (
                       <video
                         src={mediaPreviewUrl}
@@ -501,7 +541,7 @@ export function ReportWizard({ navigate }: ReportWizardProps) {
                         Tap to upload photo or video
                       </p>
                       <p className="text-xs text-muted-foreground mt-1">
-                        JPG, PNG, MP4, MOV up to 50MB
+                        JPG, PNG, MP4, MOV up to 50 MB
                       </p>
                     </div>
                   )}
@@ -523,9 +563,11 @@ export function ReportWizard({ navigate }: ReportWizardProps) {
                   <h3 className="text-xs font-bold tracking-widest uppercase text-muted-foreground">
                     Auto-Captured Metadata
                   </h3>
+
+                  {/* GPS */}
                   <div className="flex items-center gap-3">
                     <MapPin className="w-4 h-4 text-brand-red shrink-0" />
-                    <div className="text-sm">
+                    <div className="text-sm flex-1">
                       <span className="font-medium">GPS: </span>
                       {gpsStatus === "fetching" && (
                         <span className="text-muted-foreground">
@@ -548,7 +590,18 @@ export function ReportWizard({ navigate }: ReportWizardProps) {
                         </span>
                       )}
                     </div>
+                    {(gpsStatus === "denied" || gpsStatus === "idle") && (
+                      <button
+                        type="button"
+                        onClick={fetchGeo}
+                        className="flex items-center gap-1 text-xs text-brand-red hover:underline shrink-0"
+                      >
+                        <RefreshCw className="w-3 h-3" /> Retry
+                      </button>
+                    )}
                   </div>
+
+                  {/* Timestamp */}
                   <div className="flex items-center gap-3">
                     <Clock className="w-4 h-4 text-brand-red shrink-0" />
                     <div className="text-sm font-mono">
@@ -585,6 +638,7 @@ export function ReportWizard({ navigate }: ReportWizardProps) {
               </div>
             )}
 
+            {/* ── STEP 3: Statement ── */}
             {step === 3 && (
               <div>
                 <h2 className="text-2xl font-black text-foreground mb-2">
@@ -628,6 +682,7 @@ export function ReportWizard({ navigate }: ReportWizardProps) {
               </div>
             )}
 
+            {/* ── STEP 4: Signature ── */}
             {step === 4 && (
               <div>
                 <h2 className="text-2xl font-black text-foreground mb-2">
@@ -637,19 +692,21 @@ export function ReportWizard({ navigate }: ReportWizardProps) {
                   Sign using your finger (mobile) or mouse (desktop) in the box
                   below.
                 </p>
-                <div className="border-2 border-dashed border-border rounded-2xl overflow-hidden bg-white">
+                <div className="border-2 border-border rounded-2xl overflow-hidden bg-white shadow-sm">
                   <canvas
                     ref={canvasRef}
                     data-ocid="report.canvas_target"
                     width={600}
                     height={200}
-                    className="canvas-sig w-full h-48 cursor-crosshair"
-                    style={{ touchAction: "none" }}
+                    className="w-full cursor-crosshair block"
+                    style={{ touchAction: "none", height: "200px" }}
                   />
                 </div>
                 <div className="flex items-center justify-between mt-3">
                   <p className="text-xs text-muted-foreground">
-                    Sign in the box above
+                    {signatureDataUrl
+                      ? "Signature captured ✓"
+                      : "Draw your signature above"}
                   </p>
                   <button
                     type="button"
@@ -657,13 +714,13 @@ export function ReportWizard({ navigate }: ReportWizardProps) {
                     onClick={clearSignature}
                     className="flex items-center gap-1 text-sm text-muted-foreground hover:text-brand-red transition-colors"
                   >
-                    <RotateCcw className="w-3.5 h-3.5" />
-                    Clear
+                    <RotateCcw className="w-3.5 h-3.5" /> Clear
                   </button>
                 </div>
               </div>
             )}
 
+            {/* ── STEP 5: Review & Submit ── */}
             {step === 5 && (
               <div>
                 <h2 className="text-2xl font-black text-foreground mb-2">
@@ -693,7 +750,7 @@ export function ReportWizard({ navigate }: ReportWizardProps) {
                   />
                   <ReviewRow
                     label="Media"
-                    value={mediaKey ? "Uploaded ✓" : "No media"}
+                    value={mediaKey ? "Uploaded \u2713" : "No media"}
                   />
                   <div className="bg-section-bg rounded-xl p-4">
                     <div className="text-xs font-bold text-muted-foreground mb-2 uppercase tracking-wider">

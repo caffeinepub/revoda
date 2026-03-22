@@ -25,16 +25,10 @@ export function Header({ navigate, currentView }: HeaderProps) {
           className="flex items-center gap-2 focus:outline-none"
         >
           <span className="inline-flex items-center justify-center w-8 h-8 rounded bg-brand-red text-white font-bold text-sm">
-            E
+            R
           </span>
-          <span className="font-bold text-lg text-foreground leading-none">
-            <span className="text-brand-red">EiE</span>{" "}
-            <span className="text-muted-foreground font-normal text-sm">
-              Nigeria
-            </span>
-            <span className="block text-[10px] font-bold tracking-widest text-brand-green uppercase leading-none">
-              Revoda
-            </span>
+          <span className="font-black text-xl text-foreground tracking-tight">
+            <span className="text-brand-red">Revoda</span>
           </span>
         </button>
 
